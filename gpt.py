@@ -100,9 +100,9 @@ class NiceNotesChain(Chain):
     prompts = [CleanUp, WriteNotes]
 
 chains = {
-        'Transcribe': CleanupChain,
-        'Email': EmailChain,
-        'Notes': NiceNotesChain}
+        'transcribe': CleanupChain,
+        'email': EmailChain,
+        'notes': NiceNotesChain}
 
 
 def respond(msg):

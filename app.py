@@ -76,7 +76,7 @@ def voice_processing(message):
 
 
 @bot.message_handler(commands=["list_prompts"])
-def gpt_response(message):
+def list_prompts(message):
     """ List all available prompts """
     chainlist = '\n* '.join(chains.keys())
         
@@ -94,7 +94,8 @@ def gpt_response(message):
 @bot.message_handler(func=lambda message: True, content_types=["text"])
 def echo_message(message):
     """Echo the user message"""
-    bot.reply_to(message, message.text)
+    response = gpt.prompt['notes']({'text': message.text})
+    bot.reply_to(message, response)
 
 
 if __name__ == "__main__":
