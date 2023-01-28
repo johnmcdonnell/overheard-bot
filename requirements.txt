@@ -1,4 +1,6 @@
 flask
+mysqlclient
 python-dotenv
 pyTelegramBotAPI
 openai
+peewee
