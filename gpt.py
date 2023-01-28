@@ -8,6 +8,100 @@ import openai
 openai.api_key = os.getenv("OPENAI_TOKEN", None)
 
 
+
+class Prompt:
+    prompt_template = """
+    {instructions}
+
+    The text: {text}
+
+    Output:"""
+
+    instructions = """This is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly."""
+    temperature = 0.0
+
+    expected_args = ['text']
+
+    def __init__(self, prompt_args):
+        if openai.api_key is None:
+            raise "OpenAI API Key not found. Please set the OPENAI_TOKEN environment variable"
+        
+        missing_args = [arg for arg in self.expected_args if arg not in prompt_args]
+        if missing_args:
+            raise "Prompt is missing arguments: {}".format(", ".join(missing_args))
+        
+        self.hydrated_prompt = self.prompt_template.format(instructions=self.instructions, **prompt_args)
+
+    def __call__(self):
+        gpt3_session = openai.Completion.create(
+            engine="text-davinci-003",
+            prompt=self.hydrated_prompt,
+            temperature=self.temperature,
+            n=1,
+        )
+        response = gpt3_session.choices[0].text
+        return response
+
+class CleanUp(Prompt):
+    instructions = """This is a transcription of some voice notes taken by a
+    human. It probably contains errors and homophones.
+
+    Please fix evident transcription errors, remove filler words, and make the text more readable.
+    """
+
+class WriteEmail(Prompt):
+    instructions = """This is a transcription of some voice notes taken by a
+    human. It probably contains errors and homophones.
+
+    Please use these notes to write an articulate and friendly email.
+    
+    The text: {text}
+
+    Output:
+    """
+
+class WriteNotes(Prompt):
+    instructions = """This is a transcription of some voice notes taken by a
+    human. It probably contains errors and homophones.
+
+    Please use these notes to write a terse series of bulleted notes.
+    
+    The text: {text}
+
+    Output:
+    """
+
+class Chain():
+    prompts = []
+    description = "Abstract base chain"
+
+    @property
+    def verbose_description(self):
+        return self.description + '\n\n' + '\n===>\n'.join([str(prompt) for prompt in self.prompts])
+
+    def __call__(self, prompt_args):
+        text = prompt_args['text']
+        for prompt in self.prompts:
+            prompt_args['text'] = text
+            text = prompt(prompt_args)()
+        return text
+        
+
+class CleanupChain(Chain):
+    prompts = [CleanUp]
+
+class EmailChain(Chain):
+    prompts = [CleanUp, WriteEmail]
+
+class NiceNotesChain(Chain):
+    prompts = [CleanUp, WriteNotes]
+
+chains = {
+        'Transcribe': CleanupChain,
+        'Email': EmailChain,
+        'Notes': NiceNotesChain}
+
+
 def respond(msg):
     """
     Generate a response to a user-provided message

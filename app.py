@@ -14,6 +14,8 @@ app = flask.Flask(__name__)
 
 bot = telebot.TeleBot(os.environ["TELEGRAM_TOKEN"], threaded=False)
 
+chains = gpt.chains
+
 
 WEBHOOK_URL = "https://overheardbot.vercel.app"
 
@@ -43,9 +45,14 @@ def send_welcome(message):
         """
         Welcome to the demo bot. 
 
-        Send a message to get an echo reply
+        Send a voice message to receive a transcription!
+
+        Or run through one of our prompts.
 
         /help Prints this help message
+        /list_prompts Lists all available prompts
+        /set_prompt <prompt_name> Sets the prompt to use for the bot
+        /show_prompt <prompt_name> Shows the prompt
         /gpt <message> - Get a GPT-3 generated reply based on your prompt in gpt.py
         
         """,
@@ -67,6 +74,13 @@ def voice_processing(message):
         bot.reply_to(message, 'Sorry, transcription failed')
 
 
+
+@bot.message_handler(commands=["list_prompts"])
+def gpt_response(message):
+    """ List all available prompts """
+    chainlist = '\n* '.join(chains.keys())
+        
+    bot.reply_to(message, chainlist)
 
 
 @bot.message_handler(commands=["gpt"])
