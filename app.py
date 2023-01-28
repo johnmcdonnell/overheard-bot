@@ -16,8 +16,14 @@ bot = telebot.TeleBot(os.environ["TELEGRAM_TOKEN"], threaded=False)
 
 chains = gpt.chains
 
+# TODO maintain state of this
+CURRENT_CHAIN = 'notes'
 
 WEBHOOK_URL = "https://overheardbot.vercel.app"
+
+
+def get_current_chain():
+    return CURRENT_CHAIN
 
 
 @app.route("/")
@@ -37,7 +43,6 @@ def webhook():
     else:
         flask.abort(403)
 
-# Handle '/start' and '/help'
 @bot.message_handler(commands=["help", "start"])
 def send_welcome(message):
     bot.reply_to(
@@ -50,9 +55,9 @@ def send_welcome(message):
         Or run through one of our prompts.
 
         /help Prints this help message
-        /list_prompts Lists all available prompts
-        /set_prompt <prompt_name> Sets the prompt to use for the bot
-        /show_prompt <prompt_name> Shows the prompt
+        /list_chains Lists all available prompts
+        /set_chain <prompt_name> Sets the prompt to use for the bot
+        /show_chain <prompt_name> Shows the prompt
         /gpt <message> - Get a GPT-3 generated reply based on your prompt in gpt.py
         
         """,
@@ -94,7 +99,7 @@ def gpt_response(message):
 @bot.message_handler(func=lambda message: True, content_types=["text"])
 def echo_message(message):
     """Echo the user message"""
-    response = gpt.prompt['notes']({'text': message.text})
+    response = chains[get_current_chain()]({'text': message.text})
     bot.reply_to(message, response)
 
 
