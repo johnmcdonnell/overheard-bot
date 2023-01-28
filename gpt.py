@@ -37,6 +37,7 @@ class Prompt:
             engine="text-davinci-003",
             prompt=self.hydrated_prompt,
             temperature=self.temperature,
+            max_tokens=4000,
             n=1,
         )
         response = gpt3_session.choices[0].text
@@ -53,7 +54,7 @@ class WriteEmail(Prompt):
     instructions = """This is a transcription of some voice notes taken by a
     human. It probably contains errors and homophones.
 
-    Please use these notes to write an articulate and friendly email.
+    Please use these notes to write an friendly but concise email.
     
     The text: {text}
 
@@ -80,6 +81,8 @@ class Chain():
         return self.description + '\n\n' + '\n===>\n'.join([str(prompt) for prompt in self.prompts])
 
     def __call__(self, prompt_args):
+        if not 'text' in prompt_args:
+            raise 'text is required as an argument'
         text = prompt_args['text']
         for prompt in self.prompts:
             prompt_args['text'] = text
